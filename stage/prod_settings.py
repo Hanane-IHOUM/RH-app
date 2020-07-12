@@ -1,4 +1,9 @@
+import dj_database_url
+
 from .settings import *
+
+
+DATABASES['default'] = dj_database_url.config()
 
 DEBUG = False
 TEMPLATE_DEBUG = False
