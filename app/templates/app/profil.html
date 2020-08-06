@@ -34,13 +34,14 @@
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
 
-              <li class="nav-item dropdown no-arrow">
+            <li class="nav-item dropdown no-arrow">
 
                   <a class="nav-link dropdown-toggle" href="{% url 'profil' %}" >
                       <span class="mr-2 d-none d-lg-inline text-gray-900 big">Profil</span>
                   </a>
 
-              </li>
+            </li>
+
 
 
 <div class="topbar-divider d-none d-sm-block"></div>
@@ -74,10 +75,16 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-            <h1 class="h3 mb-0 text-gray-800">index</h1>
+            <h1 class="h3 mb-0 text-gray-800">profil</h1>
 
-            
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
 
+                  Select Resume to upload:
+
+                  <input type="file" name="cv" id="cv">
+                  <input type="submit" value="Upload Resume" name="submit">
+            </form>
           </div>
   
 {% endblock %}
