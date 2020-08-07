@@ -7,9 +7,18 @@ import io
 from io import StringIO
 import re
 import nltk
-import spacy
+#import spacy
 import os
-nlp = spacy.load("en_core_web_md")
+import pymongo
+from pymongo import MongoClient
+
+
+cluster = MongoClient("mongodb+srv://amine1:thebestof*@cluster0.mvqg4.mongodb.net/rh?retryWrites=true&w=majority") 
+db = cluster["rh"]
+collection = db["cv"]
+
+#nlp = spacy.load("en_core_web_md")
+
 
 def remove_SpeChar(text):
     text = re.sub(r'\w+:\/{2}[\d\w-]+(\.[\d\w-]+)*(?:(?:\/[^\s/]*))*', '', text, flags=re.MULTILINE)
@@ -40,6 +49,7 @@ def get_lem(text):
     text = ' '.join([word.lemma_ if word.lemma_ != '-PRON-' else word.text for word in text])
     return text
 
+
 def remove_Ent(text):
     doc = nlp(text)
     for ent in doc.ents:
@@ -52,10 +62,10 @@ def remove_Ent(text):
         
     return text
 
+
 def get_low(text):
     return text.lower()
             
-
 
 User = get_user_model()
 
@@ -85,8 +95,6 @@ def login_page(request):
     return render(request, "auth/login.html", context=context)
 
 
-
-
 def register_page(request):
     form = RegisterForm(request.POST or None)
     context = {
@@ -100,12 +108,11 @@ def register_page(request):
     return render(request, "auth/register.html", context=context)
 
 
-
-
 def logout_page(request):
     print(request)
     logout(request)
     return redirect('/')
+
 
 def profil_page(request):
     if request.method=="POST":
@@ -120,5 +127,13 @@ def profil_page(request):
                 cv = cv +"/n"+ text.extractText()
                 i +=1
             print(cv)
+            #cv = remove_SpeChar(cv)
+            #cv = remove_StopWords(cv)
+            #cv = remove_Ent(cv)
+            #cv = get_lem(cv)
+            #cv = get_low(cv)
+            #print(cv)
+            post = {"cv": cv}
+            collection.insert_one(post)
 
     return render(request, "app/profil.html")
