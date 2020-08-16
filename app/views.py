@@ -11,63 +11,68 @@ import nltk
 import os
 import pymongo
 from pymongo import MongoClient
+from nltk.tokenize import word_tokenize, RegexpTokenizer
+from nltk.corpus import stopwords 
+from nltk.stem.snowball import FrenchStemmer
+from nltk.util import ngrams
 
 
 cluster = MongoClient("mongodb+srv://amine1:thebestof*@cluster0.mvqg4.mongodb.net/rh?retryWrites=true&w=majority") 
 db = cluster["rh"]
 collection = db["cv"]
-
-#nlp = spacy.load("en_core_web_md")
+User = get_user_model()
 
 
 def remove_SpeChar(text):
-    text = re.sub(r'\w+:\/{2}[\d\w-]+(\.[\d\w-]+)*(?:(?:\/[^\s/]*))*', '', text, flags=re.MULTILINE)
-    text = re.sub('\S*@\S*\s?', '', text)
-    text = re.sub('\[.*?\]', '', text)
-    text = re.sub(r'[^\w]', ' ', text)
-    text = re.sub('[!"#$%&()*+,./:;<=>?@[\]^_`{|}~‘’•]', '', text)
-    text = re.sub('\w*\d\w*', '', text)
-    text = " ".join(text.split())
+    tokenizer = RegexpTokenizer(r'\w+')
+    text = tokenizer.tokenize(text)
+    text = " ".join(text)
     return text
 
 
 def remove_StopWords(text):
-    sentence = nlp(text)
-    filtered_sentence = ''
-    token_list = []
-    for token in sentence : 
-        token_list.append(token.text)
-    for word in token_list:
-        lexeme = nlp.vocab[word]
-        if lexeme.is_stop == False :
-            filtered_sentence += ' '+word
-    return filtered_sentence
+   text_tokens = word_tokenize(text)
+   tokens_without_sw = [word for word in text_tokens if not word in stopwords.words('french')]
+   text = " ".join(tokens_without_sw)
+   return text
 
 
 def get_lem(text):
-    text = nlp(text)
-    text = ' '.join([word.lemma_ if word.lemma_ != '-PRON-' else word.text for word in text])
-    return text
-
-
-def remove_Ent(text):
-    doc = nlp(text)
-    for ent in doc.ents:
-        if ent.label_ == 'DATE' : 
-            text = re.sub(ent.text,' ',text)
-        elif ent.label_ == 'PERSON' : 
-            text = re.sub(ent.text,' ',text)
-        elif ent.label_ == 'GPE' : 
-            text = re.sub(ent.text,' ',text)
-        
+    stemmer = FrenchStemmer()
+    text_tokens = word_tokenize(text)
+    text =""
+    for word in text_tokens :
+        text += " "+stemmer.stem(word)
     return text
 
 
 def get_low(text):
     return text.lower()
-            
 
-User = get_user_model()
+
+def unigram(text):
+    uni = word_tokenize(text)
+    return uni 
+
+
+def bigram(unig):
+    #bi = list(nltk.bigrams(text.split()))
+    bi = list(ngrams(unig,2))
+    return bi
+
+
+def trigam(unig):
+    trigam_string=[]
+    phrase=""
+    tri = list(ngrams(unig,3))
+    for liste in tri :
+        for mot in liste:
+            phrase = phrase + mot + " "
+        trigam_string.append(phrase)
+        phrase =""   
+    return trigam_string         
+
+
 
 # Create your views here.
 @login_required(login_url='/login/')
@@ -126,14 +131,23 @@ def profil_page(request):
                 text = pdfReader.getPage(i)
                 cv = cv +"/n"+ text.extractText()
                 i +=1
-            print(cv)
-            #cv = remove_SpeChar(cv)
-            #cv = remove_StopWords(cv)
-            #cv = remove_Ent(cv)
-            #cv = get_lem(cv)
-            #cv = get_low(cv)
             #print(cv)
-            post = {"cv": cv}
+            text_extracted = cv
+            cv = remove_SpeChar(cv)
+            cv = remove_StopWords(cv) 
+            #cv = get_lem(cv)
+            cv = get_low(cv)
+            unigra = unigram(cv)
+            bigra = bigram(unigra)
+            trigra = trigam(unigra)
+            print(trigra)
+            post = {
+                    "text_extracted": text_extracted,
+                    "text_without_SC_SW_Stemm": cv,
+                    "unigram": unigra,
+                    "bigram": bigra,
+                    "trigam": trigra
+                    }
             collection.insert_one(post)
 
     return render(request, "app/profil.html")
