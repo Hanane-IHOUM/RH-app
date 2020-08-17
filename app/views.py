@@ -15,7 +15,7 @@ from nltk.tokenize import word_tokenize, RegexpTokenizer
 from nltk.corpus import stopwords 
 from nltk.stem.snowball import FrenchStemmer
 from nltk.util import ngrams
-from . import nltkdownload 
+
 
 
 cluster = MongoClient("mongodb+srv://amine1:thebestof*@cluster0.mvqg4.mongodb.net/rh?retryWrites=true&w=majority") 
